@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AWS Simulator v6.0 (Smart Start)</title>
+    <title>AWS Simulator v6.1 (Fixed Upload)</title>
     <style>
         :root {
             --aws-dark: #232f3e;
@@ -73,7 +73,7 @@
             border-radius: 12px;
             margin: 20px auto;
             max-width: 600px;
-            display: none; /* Se activa con JS */
+            display: none; 
         }
         .found-icon { font-size: 3rem; display: block; margin-bottom: 10px; }
         .found-title { font-weight: bold; font-size: 1.2rem; color: #14532d; margin-bottom: 5px; }
@@ -89,7 +89,7 @@
             max-width: 600px;
             transition: 0.3s; 
             cursor: pointer; 
-            display: none; /* Se activa si falla el default o usuario pide cambiar */
+            display: none; 
         }
         .file-box:hover { border-color: var(--acc); background: #fffdf5; }
         
@@ -247,14 +247,14 @@
 
     <div id="screen-load">
         <h1>Simulador AWS Pro</h1>
-        <div id="loading-indicator">🔄 Buscando 'Archivo de preguntas'...</div>
+        <div id="loading-indicator">🔄 Buscando Archivo de preguntas...</div>
         
         <div id="default-found" class="found-card">
             <span class="found-icon">✅</span>
             <div class="found-title">Archivo Detectado</div>
             <div class="found-info">Se cargará: <strong>AWSPractitioner.json</strong></div>
             <div class="found-info" style="font-size:0.9rem; margin-top:-15px;">
-                Contiene <span id="found-count" style="font-weight:bold;">0</span> preguntas
+                Preguntas encontradas: <span id="found-count" style="font-weight:bold;">0</span>
             </div>
             
             <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
@@ -265,7 +265,7 @@
 
         <div id="manual-upload" class="file-box">
             <h2 style="margin-bottom:10px;">📂</h2>
-            <h3>Cargar Banco (JSON)</h3>
+            <h3>Cargar archivo de preguntas (JSON)</h3>
             <p style="color:#666;">No se detectó archivo por defecto.<br>Clic o arrastra tu archivo aquí.</p>
             <input type="file" id="fileInput" accept=".json" style="display:none">
         </div>
@@ -277,7 +277,7 @@
         <h2>Configurar Examen</h2>
         <div class="config-card">
             <div class="stat-row">
-                <span>Banco Cargado:</span>
+                <span>Preguntas disponibles:</span>
                 <strong id="total-available" style="float:right">0</strong>
             </div>
             <div id="dup-alert" style="display:none; color: var(--error); margin-top:5px; font-size:0.9rem;">
@@ -375,7 +375,7 @@
 </div>
 
 <script>
-    // NOMBRE DEL ARCHIVO POR DEFECTO
+    // CONFIG: NOMBRE DEL ARCHIVO EN TU REPOSITORIO
     const DEFAULT_DB_PATH = 'AWSPractitioner.json';
 
     let fullDB = [], sessionDB = [], currentIdx = 0, score = 0, currentMode = 'study';
@@ -392,7 +392,6 @@
         tryLoadDefaultDB();
     });
 
-    // Intentar cargar AWSPractitioner.json al inicio
     function tryLoadDefaultDB() {
         loadingIndicator.style.display = 'block';
         manualUploadBox.style.display = 'none';
@@ -405,7 +404,7 @@
             })
             .then(data => {
                 loadingIndicator.style.display = 'none';
-                processRawData(data, true); // true = es carga automática
+                processRawData(data, true); // true = carga automática
             })
             .catch(err => {
                 loadingIndicator.style.display = 'none';
@@ -417,13 +416,30 @@
     function showManualUpload() {
         defaultFoundCard.style.display = 'none';
         manualUploadBox.style.display = 'block';
+        // CRÍTICO: Limpiar el input para permitir re-seleccionar el mismo archivo si hubo error antes
+        fileInput.value = ''; 
     }
 
-    // MANEJO DE ARCHIVOS MANUALES
-    fileInput.addEventListener('change', (e) => { if(e.target.files.length) processFile(e.target.files[0]); });
-    const dropZone = document.querySelector('.file-box');
-    ['dragover', 'dragleave', 'drop'].forEach(eventName => dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false));
-    dropZone.addEventListener('drop', (e) => { if(e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]); });
+    // --- MANEJO DE ARCHIVOS MANUALES ---
+    
+    // Configurar clic en el área de drop
+    manualUploadBox.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => { 
+        if(e.target.files.length) processFile(e.target.files[0]); 
+    });
+    
+    // Drag & Drop
+    ['dragover', 'dragleave', 'drop'].forEach(eventName => {
+        manualUploadBox.addEventListener(eventName, e => { 
+            e.preventDefault(); 
+            e.stopPropagation(); 
+        }, false);
+    });
+    
+    manualUploadBox.addEventListener('drop', (e) => { 
+        if(e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]); 
+    });
 
     function processFile(file) {
         errorMsg.style.display = 'none';
@@ -433,7 +449,7 @@
                 const text = ev.target.result;
                 if (!text.trim()) throw new Error("Archivo vacío.");
                 let rawData = JSON.parse(text);
-                // Si es carga manual, pasamos directo a config
+                // false = carga manual, ir directo a config
                 processRawData(rawData, false); 
             } catch (err) {
                 errorMsg.innerText = "Error: " + err.message;
@@ -474,12 +490,10 @@
 
             // DECISIÓN DE FLUJO
             if (isAutoLoad) {
-                // Si es automático, mostramos la tarjeta de "Encontrado"
                 document.getElementById('found-count').innerText = fullDB.length;
                 defaultFoundCard.style.display = 'block';
                 manualUploadBox.style.display = 'none';
             } else {
-                // Si es manual, vamos directo a la configuración
                 goToConfigScreen();
             }
 
@@ -510,9 +524,7 @@
         document.getElementById('screen-load').style.display = 'block';
         document.getElementById('error-msg').style.display = 'none';
         
-        // Al darle "Cargar otro", forzamos la vista manual
         showManualUpload();
-        fileInput.value = '';
     }
 
     function downloadCleanDB() {

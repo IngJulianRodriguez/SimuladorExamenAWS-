@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AWS Simulator v5.0 (GitHub Ready)</title>
+    <title>AWS Simulator v6.0 (Smart Start)</title>
     <style>
         :root {
             --aws-dark: #232f3e;
@@ -62,8 +62,24 @@
             z-index: 100;
         }
 
-        /* PANTALLA DE CARGA */
-        #screen-load { text-align: center; padding: 40px 0; display: block; }
+        /* PANTALLA DE INICIO (LOAD) */
+        #screen-load { text-align: center; padding: 20px 0; display: block; }
+        
+        /* Caja de archivo encontrado */
+        .found-card {
+            background: #dcfce7;
+            border: 2px solid var(--success);
+            padding: 30px;
+            border-radius: 12px;
+            margin: 20px auto;
+            max-width: 600px;
+            display: none; /* Se activa con JS */
+        }
+        .found-icon { font-size: 3rem; display: block; margin-bottom: 10px; }
+        .found-title { font-weight: bold; font-size: 1.2rem; color: #14532d; margin-bottom: 5px; }
+        .found-info { color: #14532d; margin-bottom: 20px; }
+
+        /* Caja de carga manual */
         .file-box { 
             border: 2px dashed #ccc; 
             padding: 40px; 
@@ -73,14 +89,15 @@
             max-width: 600px;
             transition: 0.3s; 
             cursor: pointer; 
+            display: none; /* Se activa si falla el default o usuario pide cambiar */
         }
         .file-box:hover { border-color: var(--acc); background: #fffdf5; }
         
         #loading-indicator {
-            display: none;
             color: var(--aws-light);
             font-weight: bold;
-            margin-bottom: 20px;
+            margin: 40px 0;
+            font-size: 1.2rem;
         }
 
         /* PANTALLA CONFIGURACION */
@@ -189,6 +206,7 @@
             background: #17a2b8; color: white; border: 2px solid #138496;
             margin-right: auto; 
             margin-left: 10px;
+            display: inline-block;
         }
         .btn-review-special:hover { background: #138496; }
 
@@ -229,15 +247,29 @@
 
     <div id="screen-load">
         <h1>Simulador AWS Pro</h1>
-        <div id="loading-indicator">🔄 Buscando 'Preguntas por defecto'...</div>
+        <div id="loading-indicator">🔄 Buscando 'Archivo de preguntas'...</div>
         
-        <p>Si no se carga automáticamente, sube tu archivo aquí.</p>
-        <div class="file-box" onclick="document.getElementById('fileInput').click()">
+        <div id="default-found" class="found-card">
+            <span class="found-icon">✅</span>
+            <div class="found-title">Archivo Detectado</div>
+            <div class="found-info">Se cargará: <strong>AWSPractitioner.json</strong></div>
+            <div class="found-info" style="font-size:0.9rem; margin-top:-15px;">
+                Contiene <span id="found-count" style="font-weight:bold;">0</span> preguntas
+            </div>
+            
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <button class="btn btn-primary" onclick="confirmDefault()">Siguiente ➡</button>
+                <button class="btn btn-secondary" onclick="showManualUpload()">Cargar otro archivo</button>
+            </div>
+        </div>
+
+        <div id="manual-upload" class="file-box">
             <h2 style="margin-bottom:10px;">📂</h2>
             <h3>Cargar Banco (JSON)</h3>
-            <p style="color:#666;">Clic o arrastra archivo aquí</p>
+            <p style="color:#666;">No se detectó archivo por defecto.<br>Clic o arrastra tu archivo aquí.</p>
             <input type="file" id="fileInput" accept=".json" style="display:none">
         </div>
+
         <p id="error-msg"></p>
     </div>
 
@@ -273,7 +305,7 @@
             </div>
             
             <div style="margin-top: 15px; text-align: right;">
-                 <a href="#" onclick="showLoadScreen()" style="color: #666; font-size: 0.9rem;">📂 Cambiar Banco de Preguntas</a>
+                 <a href="#" onclick="showLoadScreenFull()" style="color: #666; font-size: 0.9rem;">📂 Cambiar Archivo</a>
             </div>
         </div>
     </div>
@@ -336,14 +368,14 @@
         <div style="margin-top:30px; display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
             <button class="btn btn-review-special" onclick="startReviewMode()" style="margin:0;">🔍 Revisar Respuestas</button>
             <button class="btn btn-primary" onclick="resetSession()">🔄 Nueva Prueba</button>
-            <button class="btn btn-secondary" onclick="showLoadScreen()">📂 Cargar Otro</button>
+            <button class="btn btn-secondary" onclick="showLoadScreenFull()">📂 Cargar Otro</button>
         </div>
     </div>
 
 </div>
 
 <script>
-    // CONFIGURACIÓN RUTA POR DEFECTO
+    // NOMBRE DEL ARCHIVO POR DEFECTO
     const DEFAULT_DB_PATH = 'AWSPractitioner.json';
 
     let fullDB = [], sessionDB = [], currentIdx = 0, score = 0, currentMode = 'study';
@@ -352,14 +384,20 @@
     const fileInput = document.getElementById('fileInput');
     const errorMsg = document.getElementById('error-msg');
     const loadingIndicator = document.getElementById('loading-indicator');
+    const defaultFoundCard = document.getElementById('default-found');
+    const manualUploadBox = document.getElementById('manual-upload');
 
-    // INICIO AUTOMÁTICO
+    // --- INICIO ---
     window.addEventListener('DOMContentLoaded', () => {
         tryLoadDefaultDB();
     });
 
+    // Intentar cargar AWSPractitioner.json al inicio
     function tryLoadDefaultDB() {
         loadingIndicator.style.display = 'block';
+        manualUploadBox.style.display = 'none';
+        defaultFoundCard.style.display = 'none';
+
         fetch(DEFAULT_DB_PATH)
             .then(response => {
                 if (!response.ok) throw new Error("No encontrado");
@@ -367,12 +405,18 @@
             })
             .then(data => {
                 loadingIndicator.style.display = 'none';
-                processRawData(data);
+                processRawData(data, true); // true = es carga automática
             })
             .catch(err => {
                 loadingIndicator.style.display = 'none';
-                console.log("No se cargó banco por defecto, esperando manual.");
+                console.log("No se cargó banco por defecto, mostrando manual.");
+                showManualUpload();
             });
+    }
+
+    function showManualUpload() {
+        defaultFoundCard.style.display = 'none';
+        manualUploadBox.style.display = 'block';
     }
 
     // MANEJO DE ARCHIVOS MANUALES
@@ -389,7 +433,8 @@
                 const text = ev.target.result;
                 if (!text.trim()) throw new Error("Archivo vacío.");
                 let rawData = JSON.parse(text);
-                processRawData(rawData);
+                // Si es carga manual, pasamos directo a config
+                processRawData(rawData, false); 
             } catch (err) {
                 errorMsg.innerText = "Error: " + err.message;
                 errorMsg.style.display = 'block';
@@ -398,7 +443,8 @@
         reader.readAsText(file);
     }
 
-    function processRawData(rawData) {
+    // Procesar datos JSON
+    function processRawData(rawData, isAutoLoad) {
         try {
             if (!Array.isArray(rawData)) throw new Error("JSON inválido (debe ser un array).");
 
@@ -412,35 +458,61 @@
             fullDB = Array.from(uniqueMap.values());
             if (fullDB.length === 0) throw new Error("Sin preguntas válidas.");
 
-            // Éxito: Cambiar pantalla
-            document.getElementById('screen-load').style.display = 'none';
-            document.getElementById('screen-config').style.display = 'block';
+            // GUARDAR DATOS Y CONFIGURAR UI
             document.getElementById('total-available').innerText = fullDB.length;
             
             if (dups > 0) {
                 document.getElementById('dup-alert').style.display = 'block';
                 document.getElementById('dup-count').innerText = dups;
+            } else {
+                document.getElementById('dup-alert').style.display = 'none';
             }
+
             const input = document.getElementById('q-amount');
             input.max = fullDB.length;
             input.value = Math.min(20, fullDB.length);
+
+            // DECISIÓN DE FLUJO
+            if (isAutoLoad) {
+                // Si es automático, mostramos la tarjeta de "Encontrado"
+                document.getElementById('found-count').innerText = fullDB.length;
+                defaultFoundCard.style.display = 'block';
+                manualUploadBox.style.display = 'none';
+            } else {
+                // Si es manual, vamos directo a la configuración
+                goToConfigScreen();
+            }
+
         } catch (err) {
             errorMsg.innerText = "Error: " + err.message;
             errorMsg.style.display = 'block';
-            // Si falló el default, asegúrate de mostrar la pantalla de carga
-            document.getElementById('screen-load').style.display = 'block';
+            showManualUpload();
         }
     }
 
-    function showLoadScreen() {
+    // Navegación entre pantallas
+    function confirmDefault() {
+        goToConfigScreen();
+    }
+
+    function goToConfigScreen() {
+        document.getElementById('screen-load').style.display = 'none';
+        document.getElementById('screen-config').style.display = 'block';
+    }
+
+    function showLoadScreenFull() {
         stopTimer();
         fullDB = [];
         document.getElementById('screen-config').style.display = 'none';
         document.getElementById('screen-results').style.display = 'none';
         document.getElementById('screen-quiz').style.display = 'none';
+        
         document.getElementById('screen-load').style.display = 'block';
         document.getElementById('error-msg').style.display = 'none';
-        fileInput.value = ''; // Reset input
+        
+        // Al darle "Cargar otro", forzamos la vista manual
+        showManualUpload();
+        fileInput.value = '';
     }
 
     function downloadCleanDB() {
@@ -589,13 +661,11 @@
         const btnReturn = document.getElementById('btn-return'); 
         const fbArea = document.getElementById('fb-area');
         
-        // 1. ESTADO INICIAL: OCULTAR TODO EXCEPTO PREV
+        // 1. ESTADO INICIAL
         btnCheck.classList.add('hidden');
         btnNext.classList.add('hidden');
         btnFinish.classList.add('hidden');
         fbArea.style.display = 'none';
-        
-        // FORZAMOS OCULTAR EL BOTON RETURN
         btnReturn.style.display = 'none';
 
         // 2. Lógica según el modo
@@ -623,10 +693,7 @@
         } else if (currentMode === 'review') {
             fbArea.style.display = 'block';
             document.getElementById('fb-text').innerHTML = linkify(q._explanation);
-            
-            // FORZAR MOSTRAR CON STYLE
             btnReturn.style.display = 'inline-block'; 
-
             if (currentIdx < sessionDB.length - 1) {
                 btnNext.classList.remove('hidden');
             }

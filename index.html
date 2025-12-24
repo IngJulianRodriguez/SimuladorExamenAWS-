@@ -65,7 +65,6 @@
         /* PANTALLA DE INICIO (LOAD) */
         #screen-load { text-align: center; padding: 20px 0; display: block; }
         
-        /* Caja de archivo encontrado */
         .found-card {
             background: #dcfce7;
             border: 2px solid var(--success);
@@ -79,7 +78,6 @@
         .found-title { font-weight: bold; font-size: 1.2rem; color: #14532d; margin-bottom: 5px; }
         .found-info { color: #14532d; margin-bottom: 20px; }
 
-        /* Caja de carga manual */
         .file-box { 
             border: 2px dashed #ccc; 
             padding: 40px; 
@@ -113,7 +111,6 @@
             border-top: 5px solid var(--aws-dark);
         }
 
-        /* SELECCIÓN DE MODO */
         .mode-selection { display: flex; gap: 15px; margin: 20px 0; }
         .mode-option {
             flex: 1;
@@ -166,16 +163,13 @@
         .opt-label.disabled { cursor: default; }
         
         .opt-label input { margin-top: 5px; transform: scale(1.3); cursor: pointer; }
-        .opt-label.disabled input { cursor: default; }
         .opt-label span { flex: 1; line-height: 1.5; font-size: 1.05rem; }
 
-        /* ESTADOS */
         .opt-label.correct { background: #dcfce7; border-color: var(--success); color: #14532d; }
         .opt-label.incorrect { background: #fee2e2; border-color: var(--error); color: #7f1d1d; }
         .opt-label.missed { background: #f0fdf4; border-color: var(--success); border-style: dashed; }
         .opt-label.selected-exam { border-color: var(--aws-dark); background: #eef6fc; font-weight: 500; }
 
-        /* FEEDBACK */
         .feedback-area { 
             margin-top: 30px; 
             background: #f0f7ff; 
@@ -188,41 +182,41 @@
         .feedback-title { font-weight: bold; color: var(--aws-dark); margin-bottom: 10px; display: block; }
         .feedback-content { font-size: 1rem; line-height: 1.7; white-space: pre-wrap; color: #333; }
         .feedback-content a { color: #0073bb; text-decoration: underline; font-weight: 600; }
-        .feedback-content a:hover { color: #005b96; }
 
-        /* BOTONES */
         .action-row { margin-top: 30px; display: flex; justify-content: space-between; align-items: center; }
         
         .btn { padding: 12px 25px; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
         .btn-primary { background: var(--aws-dark); color: white; }
         .btn-primary:hover { background: #161e2d; }
         .btn-secondary { background: #e5e7eb; color: #374151; }
-        .btn-secondary:hover { background: #d1d5db; }
         .btn-check { background: var(--acc); color: white; }
-        .btn-check:hover { background: #e08b00; }
-        
-        /* Botón Revisión Especial */
-        .btn-review-special { 
-            background: #17a2b8; color: white; border: 2px solid #138496;
-            margin-right: auto; 
-            margin-left: 10px;
-            display: inline-block;
-        }
-        .btn-review-special:hover { background: #138496; }
+        .btn-review-special { background: #17a2b8; color: white; border: 2px solid #138496; margin-right: auto; margin-left: 10px; display: inline-block; }
 
         .btn:disabled { background: #ccc; cursor: not-allowed; color: #666; }
 
-        /* RESULTADOS */
+        /* INPUTS DE RANGO */
+        .range-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #eee;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .range-box input {
+            width: 70px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+        }
+
         #screen-results { display: none; text-align: center; }
         .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin: 30px 0; }
-        .result-card { background: #f8f9fa; padding: 20px; border-radius: 10px; border-bottom: 4px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .result-card.score { border-color: var(--aws-dark); }
-        .result-card.correct { border-color: var(--success); }
-        .result-card.incorrect { border-color: var(--error); }
-        .result-card.time { border-color: var(--acc); }
-        
+        .result-card { background: #f8f9fa; padding: 20px; border-radius: 10px; border-bottom: 4px solid #ccc; }
         .stat-number { display: block; font-size: 2rem; font-weight: bold; color: #333; }
-        .stat-label { font-size: 0.9rem; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-label { font-size: 0.9rem; color: #666; text-transform: uppercase; }
 
         .score-circle {
             width: 150px; height: 150px; border-radius: 50%;
@@ -253,7 +247,6 @@
             <span class="found-icon">✅</span>
             <div class="found-title">Archivo Detectado</div>
             <div class="found-info">Preguntas para examen: <strong>AWSPractitioner</strong></div>
-            
             <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
                 <button class="btn btn-primary" onclick="confirmDefault()">Siguiente ➡</button>
                 <button class="btn btn-secondary" onclick="showManualUpload()">Cargar otro archivo</button>
@@ -266,7 +259,6 @@
             <p style="color:#666;">No se detectó archivo por defecto.<br>Clic o arrastra tu archivo aquí.</p>
             <input type="file" id="fileInput" accept=".json" style="display:none">
         </div>
-
         <p id="error-msg"></p>
     </div>
 
@@ -274,15 +266,21 @@
         <h2>Configurar Examen</h2>
         <div class="config-card">
             <div class="stat-row">
-                <span>Preguntas disponibles:</span>
+                <span>Preguntas totales en archivo:</span>
                 <strong id="total-available" style="float:right">0</strong>
             </div>
-            <div id="dup-alert" style="display:none; color: var(--error); margin-top:5px; font-size:0.9rem;">
-                ⚠️ Se eliminaron <span id="dup-count">0</span> duplicados. 
-                <a href="#" onclick="downloadCleanDB()" style="color:var(--aws-dark); margin-left:10px;">[Descargar Limpio]</a>
-            </div>
+            
             <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;">
             
+            <label style="font-weight:bold; display:block; margin-bottom:5px;">Rango de Selección:</label>
+			<span class="mode-desc">(Si quieres dominar un bloque de preguntas dentro del archivo)</span>
+            <div class="range-box">
+                <span>Desde la #</span>
+                <input type="number" id="range-start" value="1" min="1">
+                <span>hasta la #</span>
+                <input type="number" id="range-end" value="1" min="1">
+            </div>
+
             <label style="font-weight:bold;">Selecciona el Modo:</label>
             <div class="mode-selection">
                 <div class="mode-option selected" onclick="selectMode('study')" id="mode-study">
@@ -295,7 +293,7 @@
                 </div>
             </div>
 
-            <label for="q-amount" style="font-weight:bold; display:block; margin-bottom:10px;">Cantidad de preguntas:</label>
+            <label for="q-amount" style="font-weight:bold; display:block; margin-bottom:10px;">Cantidad de preguntas a responder:</label>
             <div style="display:flex; gap:10px;">
                 <input type="number" id="q-amount" min="1" value="20" style="padding:10px; border-radius:4px; border:1px solid #ccc; width:80px; text-align:center;">
                 <button class="btn btn-primary" onclick="startQuiz()" style="flex:1;">INICIAR</button>
@@ -331,50 +329,34 @@
 
         <div class="action-row">
             <button id="btn-prev" class="btn btn-secondary" onclick="prevQuestion()">⬅ Anterior</button>
-            
             <button id="btn-return" class="btn btn-review-special" onclick="finishExam()" style="display:none;">↩ Volver a Resultados</button>
-            
             <div style="display:flex; gap:10px;">
                 <button id="btn-check" class="btn btn-check" onclick="checkAnswer()">Verificar</button>
                 <button id="btn-next" class="btn btn-primary hidden" onclick="nextQuestion()">Siguiente ➡</button>
-                <button id="btn-finish-exam" class="btn btn-primary hidden" onclick="finishExam()">Finalizar Examen 🏁</button>
+                <button id="btn-finish-exam" class="btn btn-primary hidden" onclick="finishExam()">Finalizar 🏁</button>
             </div>
         </div>
     </div>
 
     <div id="screen-results">
-        <h2>Resultados del Simulacro</h2>
+        <h2>Resultados</h2>
         <div class="score-circle" id="final-score">0%</div>
         <p id="final-msg" style="font-size:1.2rem; margin-bottom:30px;"></p>
-
         <div class="results-grid">
-            <div class="result-card score">
-                <span class="stat-number" id="res-total">0</span><span class="stat-label">Total</span>
-            </div>
-            <div class="result-card correct">
-                <span class="stat-number" id="res-correct" style="color:var(--success)">0</span><span class="stat-label">Correctas</span>
-            </div>
-            <div class="result-card incorrect">
-                <span class="stat-number" id="res-incorrect" style="color:var(--error)">0</span><span class="stat-label">Incorrectas</span>
-            </div>
-            <div class="result-card time">
-                <span class="stat-number" id="res-time">00:00</span><span class="stat-label">Tiempo</span>
-            </div>
+            <div class="result-card"><span class="stat-number" id="res-total">0</span><span class="stat-label">Total</span></div>
+            <div class="result-card"><span class="stat-number" id="res-correct" style="color:var(--success)">0</span><span class="stat-label">Correctas</span></div>
+            <div class="result-card"><span class="stat-number" id="res-incorrect" style="color:var(--error)">0</span><span class="stat-label">Erróneas</span></div>
+            <div class="result-card"><span class="stat-number" id="res-time">00:00</span><span class="stat-label">Tiempo</span></div>
         </div>
-
         <div style="margin-top:30px; display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
             <button class="btn btn-review-special" onclick="startReviewMode()" style="margin:0;">🔍 Revisar Respuestas</button>
             <button class="btn btn-primary" onclick="resetSession()">🔄 Nueva Prueba</button>
-            <button class="btn btn-secondary" onclick="showLoadScreenFull()">📂 Cargar Otro</button>
         </div>
     </div>
-
 </div>
 
 <script>
-    // CONFIG: NOMBRE DEL ARCHIVO EN TU REPOSITORIO
     const DEFAULT_DB_PATH = 'AWSPractitioner.json';
-
     let fullDB = [], sessionDB = [], currentIdx = 0, score = 0, currentMode = 'study';
     let timerInterval, secondsElapsed = 0;
 
@@ -384,28 +366,17 @@
     const defaultFoundCard = document.getElementById('default-found');
     const manualUploadBox = document.getElementById('manual-upload');
 
-    // --- INICIO ---
-    window.addEventListener('DOMContentLoaded', () => {
-        tryLoadDefaultDB();
-    });
+    window.addEventListener('DOMContentLoaded', tryLoadDefaultDB);
 
     function tryLoadDefaultDB() {
-        loadingIndicator.style.display = 'block';
-        manualUploadBox.style.display = 'none';
-        defaultFoundCard.style.display = 'none';
-
         fetch(DEFAULT_DB_PATH)
-            .then(response => {
-                if (!response.ok) throw new Error("No encontrado");
-                return response.json();
-            })
+            .then(res => res.json())
             .then(data => {
                 loadingIndicator.style.display = 'none';
-                processRawData(data, true); // true = carga automática
+                processRawData(data, true);
             })
-            .catch(err => {
+            .catch(() => {
                 loadingIndicator.style.display = 'none';
-                console.log("No se cargó banco por defecto, mostrando manual.");
                 showManualUpload();
             });
     }
@@ -413,120 +384,51 @@
     function showManualUpload() {
         defaultFoundCard.style.display = 'none';
         manualUploadBox.style.display = 'block';
-        // CRÍTICO: Limpiar el input para permitir re-seleccionar el mismo archivo si hubo error antes
         fileInput.value = ''; 
     }
 
-    // --- MANEJO DE ARCHIVOS MANUALES ---
-    
-    // Configurar clic en el área de drop
     manualUploadBox.addEventListener('click', () => fileInput.click());
-
-    fileInput.addEventListener('change', (e) => { 
-        if(e.target.files.length) processFile(e.target.files[0]); 
-    });
-    
-    // Drag & Drop
-    ['dragover', 'dragleave', 'drop'].forEach(eventName => {
-        manualUploadBox.addEventListener(eventName, e => { 
-            e.preventDefault(); 
-            e.stopPropagation(); 
-        }, false);
-    });
-    
-    manualUploadBox.addEventListener('drop', (e) => { 
-        if(e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]); 
-    });
+    fileInput.addEventListener('change', (e) => { if(e.target.files.length) processFile(e.target.files[0]); });
 
     function processFile(file) {
-        errorMsg.style.display = 'none';
         const reader = new FileReader();
         reader.onload = (ev) => {
             try {
-                const text = ev.target.result;
-                if (!text.trim()) throw new Error("Archivo vacío.");
-                let rawData = JSON.parse(text);
-                // false = carga manual, ir directo a config
-                processRawData(rawData, false); 
+                processRawData(JSON.parse(ev.target.result), false); 
             } catch (err) {
-                errorMsg.innerText = "Error: " + err.message;
+                errorMsg.innerText = "Error: JSON inválido";
                 errorMsg.style.display = 'block';
             }
         };
         reader.readAsText(file);
     }
 
-    // Procesar datos JSON
     function processRawData(rawData, isAutoLoad) {
-        try {
-            if (!Array.isArray(rawData)) throw new Error("JSON inválido (debe ser un array).");
+        if (!Array.isArray(rawData)) return;
+        fullDB = rawData;
 
-            const uniqueMap = new Map();
-            let dups = 0;
-            rawData.forEach(q => {
-                const txt = (q.q || q.text || q.question || "").trim();
-                if (txt) uniqueMap.has(txt) ? dups++ : uniqueMap.set(txt, q);
-            });
+        // Configurar UI de rangos
+        const total = fullDB.length;
+        document.getElementById('total-available').innerText = total;
+        
+        const rStart = document.getElementById('range-start');
+        const rEnd = document.getElementById('range-end');
+        const qAmount = document.getElementById('q-amount');
 
-            fullDB = Array.from(uniqueMap.values());
-            if (fullDB.length === 0) throw new Error("Sin preguntas válidas.");
+        rStart.max = total;
+        rEnd.max = total;
+        rStart.value = 1;
+        rEnd.value = total;
+        qAmount.value = Math.min(20, total);
 
-            // GUARDAR DATOS Y CONFIGURAR UI
-            document.getElementById('total-available').innerText = fullDB.length;
-            
-            if (dups > 0) {
-                document.getElementById('dup-alert').style.display = 'block';
-                document.getElementById('dup-count').innerText = dups;
-            } else {
-                document.getElementById('dup-alert').style.display = 'none';
-            }
-
-            const input = document.getElementById('q-amount');
-            input.max = fullDB.length;
-            input.value = Math.min(20, fullDB.length);
-
-            // DECISIÓN DE FLUJO
-            if (isAutoLoad) {
-                defaultFoundCard.style.display = 'block';
-                manualUploadBox.style.display = 'none';
-            } else {
-                goToConfigScreen();
-            }
-
-        } catch (err) {
-            errorMsg.innerText = "Error: " + err.message;
-            errorMsg.style.display = 'block';
-            showManualUpload();
-        }
+        if (isAutoLoad) defaultFoundCard.style.display = 'block';
+        else goToConfigScreen();
     }
 
-    // Navegación entre pantallas
-    function confirmDefault() {
-        goToConfigScreen();
-    }
-
+    function confirmDefault() { goToConfigScreen(); }
     function goToConfigScreen() {
         document.getElementById('screen-load').style.display = 'none';
         document.getElementById('screen-config').style.display = 'block';
-    }
-
-    function showLoadScreenFull() {
-        stopTimer();
-        fullDB = [];
-        document.getElementById('screen-config').style.display = 'none';
-        document.getElementById('screen-results').style.display = 'none';
-        document.getElementById('screen-quiz').style.display = 'none';
-        
-        document.getElementById('screen-load').style.display = 'block';
-        document.getElementById('error-msg').style.display = 'none';
-        
-        showManualUpload();
-    }
-
-    function downloadCleanDB() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullDB, null, 2));
-        const a = document.createElement('a');
-        a.href = dataStr; a.download = "banco_aws_limpio.json"; a.click();
     }
 
     function selectMode(mode) {
@@ -536,23 +438,33 @@
     }
 
     function startQuiz() {
+        const startIdx = parseInt(document.getElementById('range-start').value) - 1;
+        const endIdx = parseInt(document.getElementById('range-end').value);
         const amount = parseInt(document.getElementById('q-amount').value);
-        if (amount < 1 || amount > fullDB.length) return alert("Cantidad inválida.");
 
-        sessionDB = [...fullDB].sort(() => 0.5 - Math.random()).slice(0, amount);
+        if (startIdx < 0 || endIdx > fullDB.length || startIdx >= endIdx) {
+            return alert("Rango de preguntas inválido.");
+        }
+
+        // 1. Filtrar por rango
+        let rangeDB = fullDB.slice(startIdx, endIdx);
+        
+        if (amount > rangeDB.length) {
+            return alert(`Solo hay ${rangeDB.length} preguntas en el rango seleccionado.`);
+        }
+
+        // 2. Mezclar y tomar la cantidad pedida
+        sessionDB = [...rangeDB].sort(() => 0.5 - Math.random()).slice(0, amount);
+        
+        // 3. Preparar preguntas
         sessionDB.forEach(q => {
             q._state = { answered: false, selectedIndices: [], isCorrect: false };
-            
-            const qText = q.q || q.text || q.question;
-            const explanation = q.e || q.explanation || "";
-            let rawOpts = q.o || q.options;
-            let correctInds = [];
+            const rawOpts = q.o || q.options;
+            let correctInds = q.a || [];
             let cleanOpts = [];
 
-            if (q.a) { 
-                correctInds = q.a;
-                cleanOpts = rawOpts;
-            } else { 
+            if (q.a) { cleanOpts = rawOpts; } 
+            else { 
                 rawOpts.forEach((opt, i) => {
                     cleanOpts.push(opt.text || opt);
                     if (opt.isCorrect) correctInds.push(i);
@@ -562,22 +474,17 @@
             let mapped = cleanOpts.map((txt, i) => ({ txt, originalIdx: i }));
             mapped.sort(() => 0.5 - Math.random());
             
-            q._text = qText;
-            q._explanation = explanation;
+            q._text = q.q || q.text || q.question;
+            q._explanation = q.e || q.explanation || "";
             q._shuffledOpts = mapped;
             q._correctIndices = correctInds;
         });
 
         currentIdx = 0;
-        score = 0;
-        secondsElapsed = 0;
-        
         document.getElementById('screen-config').style.display = 'none';
         document.getElementById('screen-quiz').style.display = 'block';
         document.getElementById('timer').style.display = 'block';
         document.getElementById('total-session').innerText = sessionDB.length;
-        document.getElementById('review-banner').style.display = 'none';
-
         startTimer();
         loadQuestion();
     }
@@ -586,14 +493,12 @@
         const q = sessionDB[currentIdx];
         const state = q._state;
         
-        const progress = ((currentIdx) / sessionDB.length) * 100;
-        document.getElementById('progress-bar').style.width = `${progress}%`;
+        document.getElementById('progress-bar').style.width = `${(currentIdx / sessionDB.length) * 100}%`;
         document.getElementById('current-idx').innerText = currentIdx + 1;
         document.getElementById('q-text').innerText = q._text;
 
         const isMulti = q._correctIndices.length > 1;
         const badge = document.getElementById('type-badge');
-        badge.className = isMulti ? 'badge multi' : 'badge single';
         badge.innerText = isMulti ? 'SELECCIÓN MÚLTIPLE' : 'OPCIÓN ÚNICA';
 
         const container = document.getElementById('opt-container');
@@ -605,191 +510,73 @@
             const input = document.createElement('input');
             input.type = isMulti ? 'checkbox' : 'radio';
             input.name = 'ans';
-            input.value = idx;
             
-            if (state.selectedIndices.includes(idx)) {
-                input.checked = true;
-                if (currentMode === 'exam') label.classList.add('selected-exam');
-            }
+            if (state.selectedIndices.includes(idx)) input.checked = true;
 
-            const shouldShowValidation = (currentMode === 'study' && state.answered) || currentMode === 'review';
-            const isInputDisabled = shouldShowValidation || (currentMode === 'review');
-
-            if (isInputDisabled) {
+            const isLocked = (currentMode === 'study' && state.answered) || currentMode === 'review';
+            if (isLocked) {
                 input.disabled = true;
                 label.classList.add('disabled');
-            }
-
-            if (shouldShowValidation) {
-                const realIdx = opt.originalIdx;
-                const isCorrect = q._correctIndices.includes(realIdx);
+                const isCorrect = q._correctIndices.includes(opt.originalIdx);
                 const isSelected = state.selectedIndices.includes(idx);
+                if (isCorrect) label.classList.add(isSelected ? 'correct' : 'missed');
+                else if (isSelected) label.classList.add('incorrect');
+            }
 
-                if (isCorrect) {
-                    if (isSelected) label.classList.add('correct');
-                    else label.classList.add('missed');
-                } else if (isSelected) {
-                    label.classList.add('incorrect');
+            label.onclick = () => { if(!isLocked) input.click(); };
+            input.onclick = (e) => {
+                if (!isMulti) state.selectedIndices = [idx];
+                else {
+                    if (input.checked) state.selectedIndices.push(idx);
+                    else state.selectedIndices = state.selectedIndices.filter(i => i !== idx);
                 }
-            }
-
-            if (!isInputDisabled) {
-                label.onclick = (e) => { if(e.target !== input) input.click(); };
-                input.onclick = (e) => {
-                    if (!isMulti) {
-                        state.selectedIndices = [idx];
-                        container.querySelectorAll('.opt-label').forEach(l => l.classList.remove('selected-exam'));
-                    } else {
-                        if (input.checked) state.selectedIndices.push(idx);
-                        else state.selectedIndices = state.selectedIndices.filter(i => i !== idx);
-                    }
-                    if (currentMode === 'exam') {
-                        if(input.checked) label.classList.add('selected-exam');
-                        else label.classList.remove('selected-exam');
-                    }
-                    e.stopPropagation();
-                };
-            }
+                e.stopPropagation();
+            };
 
             const span = document.createElement('span');
             span.innerText = opt.txt;
-            label.appendChild(input);
-            label.appendChild(span);
+            label.append(input, span);
             container.appendChild(label);
         });
 
-        // ==========================================
-        // GESTIÓN DE BOTONES
-        // ==========================================
+        updateButtons();
+    }
+
+    function updateButtons() {
+        const q = sessionDB[currentIdx];
         document.getElementById('btn-prev').disabled = (currentIdx === 0);
-        
-        const btnCheck = document.getElementById('btn-check');
-        const btnNext = document.getElementById('btn-next');
-        const btnFinish = document.getElementById('btn-finish-exam');
-        const btnReturn = document.getElementById('btn-return'); 
-        const fbArea = document.getElementById('fb-area');
-        
-        // 1. ESTADO INICIAL
-        btnCheck.classList.add('hidden');
-        btnNext.classList.add('hidden');
-        btnFinish.classList.add('hidden');
-        fbArea.style.display = 'none';
-        btnReturn.style.display = 'none';
-
-        // 2. Lógica según el modo
-        if (currentMode === 'study') {
-            if (state.answered) {
-                fbArea.style.display = 'block';
-                document.getElementById('fb-text').innerHTML = linkify(q._explanation);
-                
-                if (currentIdx === sessionDB.length - 1) {
-                    btnFinish.classList.remove('hidden');
-                } else {
-                    btnNext.classList.remove('hidden');
-                }
-            } else {
-                btnCheck.classList.remove('hidden');
-            }
-
-        } else if (currentMode === 'exam') {
-            if (currentIdx < sessionDB.length - 1) {
-                btnNext.classList.remove('hidden');
-            } else {
-                btnFinish.classList.remove('hidden');
-            }
-
-        } else if (currentMode === 'review') {
-            fbArea.style.display = 'block';
-            document.getElementById('fb-text').innerHTML = linkify(q._explanation);
-            btnReturn.style.display = 'inline-block'; 
-            if (currentIdx < sessionDB.length - 1) {
-                btnNext.classList.remove('hidden');
-            }
-        }
+        document.getElementById('btn-check').classList.toggle('hidden', currentMode !== 'study' || q._state.answered);
+        document.getElementById('btn-next').classList.toggle('hidden', (currentMode === 'study' && !q._state.answered) || currentIdx === sessionDB.length - 1);
+        document.getElementById('btn-finish-exam').classList.toggle('hidden', currentIdx !== sessionDB.length - 1 || (currentMode === 'study' && !q._state.answered));
+        document.getElementById('fb-area').style.display = (currentMode === 'review' || q._state.answered) ? 'block' : 'none';
+        document.getElementById('fb-text').innerText = q._explanation;
     }
 
     function checkAnswer() {
-        const q = sessionDB[currentIdx];
-        const inputs = document.querySelectorAll('input[name="ans"]:checked');
-        if (inputs.length === 0) return alert("Selecciona una respuesta.");
-
-        if (currentMode === 'study') {
-            const selectedIdxs = Array.from(inputs).map(i => parseInt(i.value));
-            q._state.selectedIndices = selectedIdxs;
-            q._state.answered = true;
-            
-            let allCorrect = true;
-            selectedIdxs.forEach(sIdx => {
-                if (!q._correctIndices.includes(q._shuffledOpts[sIdx].originalIdx)) allCorrect = false;
-            });
-            if (selectedIdxs.length !== q._correctIndices.length) allCorrect = false;
-            
-            if (allCorrect) q._state.isCorrect = true;
-
-            loadQuestion();
-        }
+        if (document.querySelectorAll('input[name="ans"]:checked').length === 0) return alert("Selecciona una opción.");
+        sessionDB[currentIdx]._state.answered = true;
+        loadQuestion();
     }
 
-    function nextQuestion() {
-        if (currentMode === 'exam' && sessionDB[currentIdx]._state.selectedIndices.length === 0) {
-             if(!confirm("No has seleccionado ninguna respuesta. ¿Continuar?")) return;
-        }
-        if (currentIdx < sessionDB.length - 1) {
-            currentIdx++;
-            loadQuestion();
-        }
-    }
-
-    function prevQuestion() {
-        if (currentIdx > 0) {
-            currentIdx--;
-            loadQuestion();
-        }
-    }
+    function nextQuestion() { currentIdx++; loadQuestion(); }
+    function prevQuestion() { currentIdx--; loadQuestion(); }
 
     function finishExam() {
-        if (currentMode === 'review') {
-            document.getElementById('screen-quiz').style.display = 'none';
-            document.getElementById('screen-results').style.display = 'block';
-            return;
-        }
-
-        stopTimer();
+        clearInterval(timerInterval);
         score = 0;
         sessionDB.forEach(q => {
-            const selected = q._state.selectedIndices;
-            const correct = q._correctIndices;
-            if (selected.length === correct.length) {
-                const selectedOriginals = selected.map(visIdx => q._shuffledOpts[visIdx].originalIdx);
-                const allMatch = selectedOriginals.every(val => correct.includes(val));
-                if (allMatch) {
-                    score++;
-                    q._state.isCorrect = true;
-                }
-            }
+            const selected = q._state.selectedIndices.map(i => q._shuffledOpts[i].originalIdx).sort();
+            const correct = [...q._correctIndices].sort();
+            if (JSON.stringify(selected) === JSON.stringify(correct)) score++;
         });
 
         document.getElementById('screen-quiz').style.display = 'none';
         document.getElementById('screen-results').style.display = 'block';
-        document.getElementById('timer').style.display = 'none';
-
-        const total = sessionDB.length;
-        const percentage = Math.round((score / total) * 100);
-        
-        document.getElementById('final-score').innerText = percentage + "%";
-        document.getElementById('res-total').innerText = total;
+        document.getElementById('final-score').innerText = Math.round((score/sessionDB.length)*100) + "%";
+        document.getElementById('res-total').innerText = sessionDB.length;
         document.getElementById('res-correct').innerText = score;
-        document.getElementById('res-incorrect').innerText = total - score;
+        document.getElementById('res-incorrect').innerText = sessionDB.length - score;
         document.getElementById('res-time').innerText = document.getElementById('timer').innerText;
-
-        const msg = document.getElementById('final-msg');
-        if (percentage >= 70) {
-            msg.innerHTML = `<span style="color:var(--success)">¡Felicidades! Aprobaste.</span>`;
-            document.getElementById('final-score').style.borderColor = 'var(--success)';
-        } else {
-            msg.innerHTML = `<span style="color:var(--error)">No Aprobado. Meta: 70%.</span>`;
-            document.getElementById('final-score').style.borderColor = 'var(--error)';
-        }
     }
 
     function startReviewMode() {
@@ -802,34 +589,20 @@
     }
 
     function resetSession() {
-        stopTimer();
-        score = 0;
-        currentIdx = 0;
-        secondsElapsed = 0;
-        currentMode = 'study'; 
-        selectMode('study');
-        document.getElementById('screen-results').style.display = 'none';
-        document.getElementById('screen-config').style.display = 'block';
+        location.reload();
     }
 
     function startTimer() {
-        clearInterval(timerInterval);
         secondsElapsed = 0;
-        document.getElementById('timer').innerText = "00:00";
         timerInterval = setInterval(() => {
             secondsElapsed++;
-            const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
-            const secs = (secondsElapsed % 60).toString().padStart(2, '0');
-            document.getElementById('timer').innerText = `${mins}:${secs}`;
+            const m = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const s = (secondsElapsed % 60).toString().padStart(2, '0');
+            document.getElementById('timer').innerText = `${m}:${s}`;
         }, 1000);
     }
-
-    function stopTimer() { clearInterval(timerInterval); }
-
-    function linkify(text) {
-        const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-        return text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-    }
+    
+    function showLoadScreenFull() { location.reload(); }
 </script>
 
 </body>

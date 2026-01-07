@@ -329,7 +329,7 @@
 
         <div class="action-row">
             <button id="btn-prev" class="btn btn-secondary" onclick="prevQuestion()">⬅ Anterior</button>
-            <button id="btn-return" class="btn btn-review-special" onclick="finishExam()" style="display:none;">↩ Volver a Resultados</button>
+            <button id="btn-return" class="btn btn-review-special" onclick="showResultsScreen()" style="display:none;">↩ Volver a Resultados</button>
             <div style="display:flex; gap:10px;">
                 <button id="btn-check" class="btn btn-check" onclick="checkAnswer()">Verificar</button>
                 <button id="btn-next" class="btn btn-primary hidden" onclick="nextQuestion()">Siguiente ➡</button>
@@ -349,7 +349,8 @@
             <div class="result-card"><span class="stat-number" id="res-time">00:00</span><span class="stat-label">Tiempo</span></div>
         </div>
         <div style="margin-top:30px; display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
-            <button class="btn btn-review-special" onclick="startReviewMode()" style="margin:0;">🔍 Revisar Respuestas</button>
+            <button class="btn btn-review-special" onclick="startReviewMode(false)" style="margin:0;">🔍 Revisar Respuestas</button>
+            <button class="btn btn-review-special" id="btn-review-missed" onclick="startReviewMode(true)" style="margin:0; background-color: var(--error); border-color: #a0260d;">❌ Revisar Erradas</button>
             <button class="btn btn-primary" onclick="resetSession()">🔄 Nueva Prueba</button>
         </div>
     </div>
@@ -359,6 +360,7 @@
     const DEFAULT_DB_PATH = 'AWSPractitioner.json';
     let fullDB = [], sessionDB = [], currentIdx = 0, score = 0, currentMode = 'study';
     let timerInterval, secondsElapsed = 0;
+    let reviewIndices = [];
 
     const fileInput = document.getElementById('fileInput');
     const errorMsg = document.getElementById('error-msg');
@@ -367,6 +369,27 @@
     const manualUploadBox = document.getElementById('manual-upload');
 
     window.addEventListener('DOMContentLoaded', tryLoadDefaultDB);
+
+    // Event listener para la tecla ENTER
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const quizVisible = document.getElementById('screen-quiz').style.display === 'block';
+            if (!quizVisible) return;
+
+            const btnCheck = document.getElementById('btn-check');
+            const btnNext = document.getElementById('btn-next');
+            const btnFinish = document.getElementById('btn-finish-exam');
+
+            // Prioridad: 1. Verificar si está visible, 2. Siguiente si está visible, 3. Finalizar si es la última
+            if (btnCheck && !btnCheck.classList.contains('hidden') && !btnCheck.disabled) {
+                checkAnswer();
+            } else if (btnNext && !btnNext.classList.contains('hidden') && !btnNext.disabled) {
+                nextQuestion();
+            } else if (btnFinish && !btnFinish.classList.contains('hidden') && !btnFinish.disabled) {
+                finishExam();
+            }
+        }
+    });
 
     function tryLoadDefaultDB() {
         fetch(DEFAULT_DB_PATH)
@@ -407,7 +430,6 @@
         if (!Array.isArray(rawData)) return;
         fullDB = rawData;
 
-        // Configurar UI de rangos
         const total = fullDB.length;
         document.getElementById('total-available').innerText = total;
         
@@ -446,17 +468,14 @@
             return alert("Rango de preguntas inválido.");
         }
 
-        // 1. Filtrar por rango
         let rangeDB = fullDB.slice(startIdx, endIdx);
         
         if (amount > rangeDB.length) {
             return alert(`Solo hay ${rangeDB.length} preguntas en el rango seleccionado.`);
         }
 
-        // 2. Mezclar y tomar la cantidad pedida
         sessionDB = [...rangeDB].sort(() => 0.5 - Math.random()).slice(0, amount);
         
-        // 3. Preparar preguntas
         sessionDB.forEach(q => {
             q._state = { answered: false, selectedIndices: [], isCorrect: false };
             const rawOpts = q.o || q.options;
@@ -490,11 +509,14 @@
     }
 
     function loadQuestion() {
-        const q = sessionDB[currentIdx];
+        const actualIdx = (currentMode === 'review') ? reviewIndices[currentIdx] : currentIdx;
+        const q = sessionDB[actualIdx];
         const state = q._state;
         
-        document.getElementById('progress-bar').style.width = `${(currentIdx / sessionDB.length) * 100}%`;
+        const totalToDisplay = (currentMode === 'review') ? reviewIndices.length : sessionDB.length;
+        document.getElementById('progress-bar').style.width = `${((currentIdx + 1) / totalToDisplay) * 100}%`;
         document.getElementById('current-idx').innerText = currentIdx + 1;
+        document.getElementById('total-session').innerText = totalToDisplay;
         document.getElementById('q-text').innerText = q._text;
 
         const isMulti = q._correctIndices.length > 1;
@@ -543,23 +565,41 @@
     }
 
     function updateButtons() {
-        const q = sessionDB[currentIdx];
+        const actualIdx = (currentMode === 'review') ? reviewIndices[currentIdx] : currentIdx;
+        const q = sessionDB[actualIdx];
+        const totalToDisplay = (currentMode === 'review') ? reviewIndices.length : sessionDB.length;
+
         document.getElementById('btn-prev').disabled = (currentIdx === 0);
         document.getElementById('btn-check').classList.toggle('hidden', currentMode !== 'study' || q._state.answered);
-        document.getElementById('btn-next').classList.toggle('hidden', (currentMode === 'study' && !q._state.answered) || currentIdx === sessionDB.length - 1);
-        document.getElementById('btn-finish-exam').classList.toggle('hidden', currentIdx !== sessionDB.length - 1 || (currentMode === 'study' && !q._state.answered));
+        
+        const isLast = (currentIdx === totalToDisplay - 1);
+        document.getElementById('btn-next').classList.toggle('hidden', (currentMode === 'study' && !q._state.answered) || isLast);
+        document.getElementById('btn-finish-exam').classList.toggle('hidden', !isLast || (currentMode === 'study' && !q._state.answered) || currentMode === 'review');
+        
+        document.getElementById('btn-return').style.display = (currentMode === 'review') ? 'inline-block' : 'none';
+
         document.getElementById('fb-area').style.display = (currentMode === 'review' || q._state.answered) ? 'block' : 'none';
         document.getElementById('fb-text').innerText = q._explanation;
     }
 
     function checkAnswer() {
         if (document.querySelectorAll('input[name="ans"]:checked').length === 0) return alert("Selecciona una opción.");
-        sessionDB[currentIdx]._state.answered = true;
+        const actualIdx = (currentMode === 'review') ? reviewIndices[currentIdx] : currentIdx;
+        sessionDB[actualIdx]._state.answered = true;
         loadQuestion();
     }
 
-    function nextQuestion() { currentIdx++; loadQuestion(); }
-    function prevQuestion() { currentIdx--; loadQuestion(); }
+    function nextQuestion() { 
+        currentIdx++; 
+        loadQuestion(); 
+        window.scrollTo(0, 0); // Sube al inicio al dar siguiente
+    }
+
+    function prevQuestion() { 
+        currentIdx--; 
+        loadQuestion(); 
+        window.scrollTo(0, 0); // Sube al inicio al dar anterior
+    }
 
     function finishExam() {
         clearInterval(timerInterval);
@@ -567,25 +607,47 @@
         sessionDB.forEach(q => {
             const selected = q._state.selectedIndices.map(i => q._shuffledOpts[i].originalIdx).sort();
             const correct = [...q._correctIndices].sort();
-            if (JSON.stringify(selected) === JSON.stringify(correct)) score++;
+            const isCorrect = (JSON.stringify(selected) === JSON.stringify(correct));
+            q._state.isCorrect = isCorrect; 
+            if (isCorrect) score++;
         });
 
+        showResultsScreen();
+    }
+
+    function showResultsScreen() {
         document.getElementById('screen-quiz').style.display = 'none';
         document.getElementById('screen-results').style.display = 'block';
+        document.getElementById('review-banner').style.display = 'none';
+        document.getElementById('timer').style.display = 'none';
+
         document.getElementById('final-score').innerText = Math.round((score/sessionDB.length)*100) + "%";
         document.getElementById('res-total').innerText = sessionDB.length;
         document.getElementById('res-correct').innerText = score;
         document.getElementById('res-incorrect').innerText = sessionDB.length - score;
         document.getElementById('res-time').innerText = document.getElementById('timer').innerText;
+
+        document.getElementById('btn-review-missed').style.display = (score === sessionDB.length) ? 'none' : 'inline-block';
     }
 
-    function startReviewMode() {
+    function startReviewMode(onlyMissed) {
+        reviewIndices = [];
+        sessionDB.forEach((q, idx) => {
+            if (!onlyMissed || (onlyMissed && !q._state.isCorrect)) {
+                reviewIndices.push(idx);
+            }
+        });
+
+        if (reviewIndices.length === 0) return;
+
         currentMode = 'review';
         currentIdx = 0;
         document.getElementById('screen-results').style.display = 'none';
         document.getElementById('screen-quiz').style.display = 'block';
         document.getElementById('review-banner').style.display = 'block';
+        document.getElementById('review-banner').innerText = onlyMissed ? "MODO REVISIÓN - SOLO ERRADAS" : "MODO REVISIÓN - TODAS LAS RESPUESTAS";
         loadQuestion();
+        window.scrollTo(0, 0);
     }
 
     function resetSession() {

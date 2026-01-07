@@ -351,6 +351,7 @@
         <div style="margin-top:30px; display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
             <button class="btn btn-review-special" onclick="startReviewMode(false)" style="margin:0;">🔍 Revisar Respuestas</button>
             <button class="btn btn-review-special" id="btn-review-missed" onclick="startReviewMode(true)" style="margin:0; background-color: var(--error); border-color: #a0260d;">❌ Revisar Erradas</button>
+            <button class="btn btn-secondary" onclick="downloadMissedQuestions()" id="btn-download-missed">📥 Descargar Erradas</button>
             <button class="btn btn-primary" onclick="resetSession()">🔄 Nueva Prueba</button>
         </div>
     </div>
@@ -380,7 +381,6 @@
             const btnNext = document.getElementById('btn-next');
             const btnFinish = document.getElementById('btn-finish-exam');
 
-            // Prioridad: 1. Verificar si está visible, 2. Siguiente si está visible, 3. Finalizar si es la última
             if (btnCheck && !btnCheck.classList.contains('hidden') && !btnCheck.disabled) {
                 checkAnswer();
             } else if (btnNext && !btnNext.classList.contains('hidden') && !btnNext.disabled) {
@@ -497,6 +497,14 @@
             q._explanation = q.e || q.explanation || "";
             q._shuffledOpts = mapped;
             q._correctIndices = correctInds;
+            
+            // Guardar propiedades originales para exportación posterior
+            q._originalRaw = {
+                q: q.q || q.text || q.question,
+                o: cleanOpts,
+                a: correctInds,
+                e: q.e || q.explanation || ""
+            };
         });
 
         currentIdx = 0;
@@ -592,13 +600,13 @@
     function nextQuestion() { 
         currentIdx++; 
         loadQuestion(); 
-        window.scrollTo(0, 0); // Sube al inicio al dar siguiente
+        window.scrollTo(0, 0);
     }
 
     function prevQuestion() { 
         currentIdx--; 
         loadQuestion(); 
-        window.scrollTo(0, 0); // Sube al inicio al dar anterior
+        window.scrollTo(0, 0);
     }
 
     function finishExam() {
@@ -627,7 +635,9 @@
         document.getElementById('res-incorrect').innerText = sessionDB.length - score;
         document.getElementById('res-time').innerText = document.getElementById('timer').innerText;
 
-        document.getElementById('btn-review-missed').style.display = (score === sessionDB.length) ? 'none' : 'inline-block';
+        const hasErrors = (score !== sessionDB.length);
+        document.getElementById('btn-review-missed').style.display = hasErrors ? 'inline-block' : 'none';
+        document.getElementById('btn-download-missed').style.display = hasErrors ? 'inline-block' : 'none';
     }
 
     function startReviewMode(onlyMissed) {
@@ -648,6 +658,23 @@
         document.getElementById('review-banner').innerText = onlyMissed ? "MODO REVISIÓN - SOLO ERRADAS" : "MODO REVISIÓN - TODAS LAS RESPUESTAS";
         loadQuestion();
         window.scrollTo(0, 0);
+    }
+
+    // Función para descargar preguntas fallidas en formato JSON original
+    function downloadMissedQuestions() {
+        const missed = sessionDB
+            .filter(q => !q._state.isCorrect)
+            .map(q => q._originalRaw);
+
+        if (missed.length === 0) return alert("No hay preguntas erradas para descargar.");
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(missed, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "AWS_preguntas_erradas.json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
     }
 
     function resetSession() {

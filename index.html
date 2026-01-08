@@ -226,6 +226,20 @@
             border: 8px solid var(--acc);
         }
 
+        .results-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+            align-items: center;
+        }
+        .action-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
         #error-msg { color: var(--error); font-weight: bold; display: none; margin-top: 15px; background: #fee2e2; padding: 10px; border-radius: 4px;}
         .hidden { display: none !important; }
         .review-banner { background: #fff3cd; color: #856404; padding: 10px; text-align: center; border-bottom: 1px solid #ffeeba; display: none; font-weight: bold; }
@@ -348,11 +362,21 @@
             <div class="result-card"><span class="stat-number" id="res-incorrect" style="color:var(--error)">0</span><span class="stat-label">Erróneas</span></div>
             <div class="result-card"><span class="stat-number" id="res-time">00:00</span><span class="stat-label">Tiempo</span></div>
         </div>
-        <div style="margin-top:30px; display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
-            <button class="btn btn-review-special" onclick="startReviewMode(false)" style="margin:0;">🔍 Revisar Respuestas</button>
-            <button class="btn btn-review-special" id="btn-review-missed" onclick="startReviewMode(true)" style="margin:0; background-color: var(--error); border-color: #a0260d;">❌ Revisar Erradas</button>
-            <button class="btn btn-secondary" onclick="downloadMissedQuestions()" id="btn-download-missed">📥 Descargar Erradas</button>
-            <button class="btn btn-primary" onclick="resetSession()">🔄 Nueva Prueba</button>
+        
+        <div class="results-actions">
+            <div class="action-group">
+                <button class="btn btn-review-special" onclick="startReviewMode(false)">🔍 Revisar Respuestas</button>
+                <button class="btn btn-review-special" id="btn-review-missed" onclick="startReviewMode(true)" style="background-color: var(--error); border-color: #a0260d;">❌ Revisar Erradas</button>
+            </div>
+            
+            <div class="action-group">
+                <button class="btn btn-secondary" onclick="downloadMissedQuestions()" id="btn-download-missed">📥 Descargar Erradas</button>
+                <button class="btn btn-secondary" onclick="retrySameQuiz()" style="border: 2px solid var(--aws-dark);">🔁 Repetir misma prueba</button>
+            </div>
+            
+            <div class="action-group">
+                <button class="btn btn-primary" onclick="resetSession()">🔄 Nueva Prueba</button>
+            </div>
         </div>
     </div>
 </div>
@@ -362,6 +386,7 @@
     let fullDB = [], sessionDB = [], currentIdx = 0, score = 0, currentMode = 'study';
     let timerInterval, secondsElapsed = 0;
     let reviewIndices = [];
+    let lastUsedMode = 'study'; // Para recordar el modo al repetir
 
     const fileInput = document.getElementById('fileInput');
     const errorMsg = document.getElementById('error-msg');
@@ -371,7 +396,6 @@
 
     window.addEventListener('DOMContentLoaded', tryLoadDefaultDB);
 
-    // Event listener para la tecla ENTER
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             const quizVisible = document.getElementById('screen-quiz').style.display === 'block';
@@ -455,6 +479,7 @@
 
     function selectMode(mode) {
         currentMode = mode;
+        lastUsedMode = mode;
         document.querySelectorAll('.mode-option').forEach(el => el.classList.remove('selected'));
         document.getElementById(`mode-${mode}`).classList.add('selected');
     }
@@ -498,7 +523,6 @@
             q._shuffledOpts = mapped;
             q._correctIndices = correctInds;
             
-            // Guardar propiedades originales para exportación posterior
             q._originalRaw = {
                 q: q.q || q.text || q.question,
                 o: cleanOpts,
@@ -660,7 +684,26 @@
         window.scrollTo(0, 0);
     }
 
-    // Función para descargar preguntas fallidas en formato JSON original
+    function retrySameQuiz() {
+        // Reiniciar estados de las preguntas de la sesión actual
+        sessionDB.forEach(q => {
+            q._state = { answered: false, selectedIndices: [], isCorrect: false };
+        });
+        
+        currentIdx = 0;
+        score = 0;
+        currentMode = lastUsedMode; // Restaurar el modo (estudio o examen)
+        
+        document.getElementById('screen-results').style.display = 'none';
+        document.getElementById('screen-quiz').style.display = 'block';
+        document.getElementById('timer').style.display = 'block';
+        document.getElementById('review-banner').style.display = 'none';
+        
+        startTimer();
+        loadQuestion();
+        window.scrollTo(0,0);
+    }
+
     function downloadMissedQuestions() {
         const missed = sessionDB
             .filter(q => !q._state.isCorrect)

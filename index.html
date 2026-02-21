@@ -244,6 +244,83 @@
         .hidden { display: none !important; }
         .review-banner { background: #fff3cd; color: #856404; padding: 10px; text-align: center; border-bottom: 1px solid #ffeeba; display: none; font-weight: bold; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* PANTALLA SELECCIÓN CERTIFICACIÓN */
+        #screen-cert { text-align: center; padding: 10px 0; }
+        .cert-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin: 30px auto;
+            max-width: 640px;
+        }
+        .cert-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 22px 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .cert-card:hover {
+            border-color: var(--acc);
+            box-shadow: 0 4px 16px rgba(255,153,0,0.18);
+            transform: translateY(-2px);
+        }
+        .cert-icon {
+            font-size: 2.4rem;
+            width: 56px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .cert-info { flex: 1; }
+        .cert-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--aws-dark);
+            margin-bottom: 4px;
+        }
+        .cert-level {
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+        .cert-level.foundational { background: #dcfce7; color: #166534; }
+        .cert-level.associate { background: #dbeafe; color: #1e40af; }
+        .cert-desc {
+            font-size: 0.88rem;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+        .cert-arrow {
+            font-size: 1.4rem;
+            color: #9ca3af;
+            transition: 0.2s;
+        }
+        .cert-card:hover .cert-arrow { color: var(--acc); transform: translateX(4px); }
+        .cert-divider {
+            border: 0;
+            border-top: 1px solid #e5e7eb;
+            margin: 10px auto;
+            max-width: 640px;
+        }
+        .cert-upload-link {
+            font-size: 0.9rem;
+            color: #6b7280;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .cert-upload-link:hover { color: var(--aws-dark); }
     </style>
 </head>
 <body>
@@ -253,31 +330,67 @@
     <div id="timer" class="timer-badge">00:00</div>
     <div id="review-banner" class="review-banner">MODO REVISIÓN - Resultados Finales</div>
 
-    <div id="screen-load">
-        <h1>Simulador AWS Pro</h1>
-        <div id="loading-indicator">🔄 Buscando Archivo de preguntas...</div>
-        
-        <div id="default-found" class="found-card">
-            <span class="found-icon">✅</span>
-            <div class="found-title">Archivo Detectado</div>
-            <div class="found-info">Preguntas para examen: <strong>AWSPractitioner</strong></div>
-            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
-                <button class="btn btn-primary" onclick="confirmDefault()">Siguiente ➡</button>
-                <button class="btn btn-secondary" onclick="showManualUpload()">Cargar otro archivo</button>
+    <!-- PANTALLA SELECCIÓN CERTIFICACIÓN -->
+    <div id="screen-cert">
+        <h1 style="margin-bottom:4px;">Simulador AWS Pro</h1>
+        <p style="color:#6b7280; margin-top:0; margin-bottom:8px;">Selecciona la certificación que deseas practicar</p>
+
+        <div class="cert-grid">
+            <div class="cert-card" onclick="loadCertification('https://raw.githubusercontent.com/IngJulianRodriguez/SimuladorExamenAWS-/master/AWSPractitioner.json', 'AWS Certified Cloud Practitioner')">
+                <div class="cert-icon">&#x2601;&#xFE0F;</div>
+                <div class="cert-info">
+                    <div class="cert-name">AWS Certified Cloud Practitioner</div>
+                    <span class="cert-level foundational">Foundational</span>
+                    <div class="cert-desc">778 preguntas sobre fundamentos de la nube AWS, servicios core y conceptos básicos de facturación y seguridad.</div>
+                </div>
+                <div class="cert-arrow">&#x203A;</div>
+            </div>
+
+            <div class="cert-card" onclick="loadCertification('https://raw.githubusercontent.com/IngJulianRodriguez/SimuladorExamenAWS-/master/AWSAIPractitioner.json', 'AWS Certified AI Practitioner')">
+                <div class="cert-icon">&#x1F916;</div>
+                <div class="cert-info">
+                    <div class="cert-name">AWS Certified AI Practitioner (Proximamente)</div>
+                    <span class="cert-level foundational">Foundational</span>
+                    <div class="cert-desc">Conceptos de IA/ML, servicios de inteligencia artificial de AWS y uso responsable de la IA.</div>
+                </div>
+                <div class="cert-arrow">&#x203A;</div>
+            </div>
+
+            <div class="cert-card" onclick="loadCertification('https://raw.githubusercontent.com/IngJulianRodriguez/SimuladorExamenAWS-/master/AwsSolutionsArchitectAssociate.json', 'AWS Certified Solutions Architect - Associate')">
+                <div class="cert-icon">&#x1F3D7;&#xFE0F;</div>
+                <div class="cert-info">
+                    <div class="cert-name">AWS Certified Solutions Architect - 390 Preguntas</div>
+                    <span class="cert-level associate">Associate</span>
+                    <div class="cert-desc">390 preguntas sobre diseño de arquitecturas escalables, seguras y de alta disponibilidad en AWS.</div>
+                </div>
+                <div class="cert-arrow">&#x203A;</div>
             </div>
         </div>
 
-        <div id="manual-upload" class="file-box">
-            <h2 style="margin-bottom:10px;">📂</h2>
+        <hr class="cert-divider">
+        <p style="margin:16px 0 0;">
+            <span class="cert-upload-link" onclick="showManualUploadDirect()">&#x1F4C2; Cargar archivo JSON propio</span>
+        </p>
+        <div id="manual-upload-cert" class="file-box" style="display:none; margin-top:16px;">
+            <h2 style="margin-bottom:10px;">&#x1F4C2;</h2>
             <h3>Cargar archivo de preguntas (JSON)</h3>
-            <p style="color:#666;">No se detectó archivo por defecto.<br>Clic o arrastra tu archivo aquí.</p>
+            <p style="color:#666;">Clic o arrastra tu archivo aquí.</p>
             <input type="file" id="fileInput" accept=".json" style="display:none">
         </div>
+        <div id="cert-loading" style="display:none; margin:20px 0; color:var(--aws-light); font-weight:bold;">&#x1F504; Cargando preguntas...</div>
         <p id="error-msg"></p>
+    </div>
+
+    <!-- PANTALLA CARGA (legacy, oculta) -->
+    <div id="screen-load" style="display:none;">
+        <div id="loading-indicator"></div>
+        <div id="default-found" class="found-card" style="display:none;"></div>
+        <div id="manual-upload" class="file-box" style="display:none;"></div>
     </div>
 
     <div id="screen-config">
         <h2>Configurar Examen</h2>
+        <p id="config-cert-name" style="color:#6b7280; margin-top:-10px; font-size:0.95rem;"></p>
         <div class="config-card">
             <div class="stat-row">
                 <span>Preguntas totales en archivo:</span>
@@ -314,7 +427,7 @@
             </div>
             
             <div style="margin-top: 15px; text-align: right;">
-                 <a href="#" onclick="showLoadScreenFull()" style="color: #666; font-size: 0.9rem;">📂 Cambiar Archivo</a>
+                 <a href="#" onclick="showLoadScreenFull()" style="color: #666; font-size: 0.9rem;">&#x2190; Cambiar Certificación</a>
             </div>
         </div>
     </div>
@@ -382,19 +495,55 @@
 </div>
 
 <script>
-    const DEFAULT_DB_PATH = 'AWSPractitioner.json';
     let fullDB = [], sessionDB = [], currentIdx = 0, score = 0, currentMode = 'study';
     let timerInterval, secondsElapsed = 0;
     let reviewIndices = [];
-    let lastUsedMode = 'study'; // Para recordar el modo al repetir
+    let lastUsedMode = 'study';
 
-    const fileInput = document.getElementById('fileInput');
     const errorMsg = document.getElementById('error-msg');
-    const loadingIndicator = document.getElementById('loading-indicator');
-    const defaultFoundCard = document.getElementById('default-found');
-    const manualUploadBox = document.getElementById('manual-upload');
 
-    window.addEventListener('DOMContentLoaded', tryLoadDefaultDB);
+    window.addEventListener('DOMContentLoaded', () => {
+        // Mostrar pantalla de selección de certificación directamente
+        document.getElementById('screen-cert').style.display = 'block';
+
+        // Setup file upload en pantalla cert
+        const fileInput = document.getElementById('fileInput');
+        const manualUploadCert = document.getElementById('manual-upload-cert');
+        if (fileInput && manualUploadCert) {
+            manualUploadCert.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length) processFile(e.target.files[0]);
+            });
+        }
+    });
+
+    function loadCertification(url, name) {
+        const certLoading = document.getElementById('cert-loading');
+        certLoading.style.display = 'block';
+        // Deshabilitar clicks en tarjetas
+        document.querySelectorAll('.cert-card').forEach(c => c.style.pointerEvents = 'none');
+
+        fetch(url)
+            .then(res => {
+                if (!res.ok) throw new Error('Network error');
+                return res.json();
+            })
+            .then(data => {
+                certLoading.style.display = 'none';
+                processRawData(data, name);
+            })
+            .catch(() => {
+                certLoading.style.display = 'none';
+                document.querySelectorAll('.cert-card').forEach(c => c.style.pointerEvents = '');
+                errorMsg.innerText = 'Error al cargar el archivo. Verifica tu conexión a internet.';
+                errorMsg.style.display = 'block';
+            });
+    }
+
+    function showManualUploadDirect() {
+        const box = document.getElementById('manual-upload-cert');
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -415,33 +564,11 @@
         }
     });
 
-    function tryLoadDefaultDB() {
-        fetch(DEFAULT_DB_PATH)
-            .then(res => res.json())
-            .then(data => {
-                loadingIndicator.style.display = 'none';
-                processRawData(data, true);
-            })
-            .catch(() => {
-                loadingIndicator.style.display = 'none';
-                showManualUpload();
-            });
-    }
-
-    function showManualUpload() {
-        defaultFoundCard.style.display = 'none';
-        manualUploadBox.style.display = 'block';
-        fileInput.value = ''; 
-    }
-
-    manualUploadBox.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => { if(e.target.files.length) processFile(e.target.files[0]); });
-
     function processFile(file) {
         const reader = new FileReader();
         reader.onload = (ev) => {
             try {
-                processRawData(JSON.parse(ev.target.result), false); 
+                processRawData(JSON.parse(ev.target.result), file.name.replace('.json',''));
             } catch (err) {
                 errorMsg.innerText = "Error: JSON inválido";
                 errorMsg.style.display = 'block';
@@ -450,13 +577,13 @@
         reader.readAsText(file);
     }
 
-    function processRawData(rawData, isAutoLoad) {
+    function processRawData(rawData, certName) {
         if (!Array.isArray(rawData)) return;
         fullDB = rawData;
 
         const total = fullDB.length;
         document.getElementById('total-available').innerText = total;
-        
+
         const rStart = document.getElementById('range-start');
         const rEnd = document.getElementById('range-end');
         const qAmount = document.getElementById('q-amount');
@@ -467,12 +594,15 @@
         rEnd.value = total;
         qAmount.value = Math.min(20, total);
 
-        if (isAutoLoad) defaultFoundCard.style.display = 'block';
-        else goToConfigScreen();
+        // Mostrar nombre de certificación en config
+        const configTitle = document.getElementById('config-cert-name');
+        if (configTitle) configTitle.innerText = certName || '';
+
+        goToConfigScreen();
     }
 
-    function confirmDefault() { goToConfigScreen(); }
     function goToConfigScreen() {
+        document.getElementById('screen-cert').style.display = 'none';
         document.getElementById('screen-load').style.display = 'none';
         document.getElementById('screen-config').style.display = 'block';
     }
@@ -721,7 +851,17 @@
     }
 
     function resetSession() {
-        location.reload();
+        // Go back to cert selection
+        document.getElementById('screen-results').style.display = 'none';
+        document.getElementById('screen-quiz').style.display = 'none';
+        document.getElementById('screen-config').style.display = 'none';
+        document.getElementById('timer').style.display = 'none';
+        document.getElementById('review-banner').style.display = 'none';
+        document.getElementById('screen-cert').style.display = 'block';
+        document.querySelectorAll('.cert-card').forEach(c => c.style.pointerEvents = '');
+        errorMsg.style.display = 'none';
+        fullDB = []; sessionDB = []; currentIdx = 0; score = 0;
+        clearInterval(timerInterval);
     }
 
     function startTimer() {
@@ -734,7 +874,7 @@
         }, 1000);
     }
     
-    function showLoadScreenFull() { location.reload(); }
+    function showLoadScreenFull() { resetSession(); }
 </script>
 
 </body>

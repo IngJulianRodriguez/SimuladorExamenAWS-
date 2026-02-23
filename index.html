@@ -150,7 +150,22 @@
         .badge.single { background: #e0e7ff; color: #4338ca; }
         .badge.multi { background: #fee2e2; color: #b91c1c; }
 
-        .question-text { font-size: 1.2rem; font-weight: 600; line-height: 1.6; margin-bottom: 30px; white-space: pre-line; }
+        .question-text { font-size: 1.2rem; font-weight: 600; line-height: 1.6; margin-bottom: 30px; }
+        .question-text .q-segment { display: block; white-space: pre-line; }
+        .question-text .q-code {
+            display: block;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9rem;
+            font-weight: normal;
+            line-height: 1.6;
+            padding: 14px 18px;
+            border-radius: 6px;
+            white-space: pre;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
 
         .options-list { display: flex; flex-direction: column; gap: 15px; }
         .opt-label { 
@@ -164,6 +179,23 @@
         
         .opt-label input { margin-top: 5px; transform: scale(1.3); cursor: pointer; }
         .opt-label span { flex: 1; line-height: 1.5; font-size: 1.05rem; }
+        .opt-label.code-opt { align-items: flex-start; }
+        .opt-label.code-opt input { margin-top: 8px; }
+        .opt-code {
+            flex: 1;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            padding: 14px 16px;
+            border-radius: 6px;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        .opt-label.correct .opt-code { background: #0f2d1a; color: #86efac; }
+        .opt-label.incorrect .opt-code { background: #2d0f0f; color: #fca5a5; }
+        .opt-label.missed .opt-code { background: #0f2d1a; color: #86efac; opacity: 0.8; }
 
         .opt-label.correct { background: #dcfce7; border-color: var(--success); color: #14532d; }
         .opt-label.incorrect { background: #fee2e2; border-color: var(--error); color: #7f1d1d; }
@@ -181,7 +213,35 @@
         }
         .feedback-title { font-weight: bold; color: var(--aws-dark); margin-bottom: 10px; display: block; }
         .feedback-content { font-size: 1rem; line-height: 1.7; white-space: pre-wrap; color: #333; }
+        .fb-code {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            padding: 14px 16px;
+            border-radius: 6px;
+            white-space: pre;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
         .feedback-content a { color: #0073bb; text-decoration: underline; font-weight: 600; }
+        .ref-link {
+            display: inline-block;
+            color: #0073bb;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+            padding: 3px 8px;
+            margin: 2px 0;
+            background: #e8f4fd;
+            border-radius: 4px;
+            border-left: 3px solid #0073bb;
+            transition: background 0.2s;
+            word-break: break-all;
+        }
+        .ref-link:hover { background: #cce4f7; text-decoration: underline; }
+        .ref-link::before { content: '🔗 '; font-size: 0.8rem; }
 
         .action-row { margin-top: 30px; display: flex; justify-content: space-between; align-items: center; }
         
@@ -341,7 +401,7 @@
                 <div class="cert-info">
                     <div class="cert-name">AWS Certified Cloud Practitioner</div>
                     <span class="cert-level foundational">Foundational</span>
-                    <div class="cert-desc">778 preguntas sobre fundamentos de la nube AWS, servicios core y conceptos básicos de facturación y seguridad.</div>
+                    <div class="cert-desc">778 Preguntas sobre fundamentos de la nube AWS, servicios core y conceptos básicos de facturación y seguridad.</div>
                 </div>
                 <div class="cert-arrow">&#x203A;</div>
             </div>
@@ -359,9 +419,9 @@
             <div class="cert-card" onclick="loadCertification('https://raw.githubusercontent.com/IngJulianRodriguez/SimuladorExamenAWS-/master/AwsSolutionsArchitectAssociate.json', 'AWS Certified Solutions Architect - Associate')">
                 <div class="cert-icon">&#x1F3D7;&#xFE0F;</div>
                 <div class="cert-info">
-                    <div class="cert-name">AWS Certified Solutions Architect</div>
+                    <div class="cert-name">AWS Certified Solutions Architect - Associate</div>
                     <span class="cert-level associate">Associate</span>
-                    <div class="cert-desc">390 preguntas sobre diseño de arquitecturas escalables, seguras y de alta disponibilidad en AWS.</div>
+                    <div class="cert-desc">520 Preguntas sobre diseño de arquitecturas escalables, seguras y de alta disponibilidad en AWS.</div>
                 </div>
                 <div class="cert-arrow">&#x203A;</div>
             </div>
@@ -670,6 +730,95 @@
         loadQuestion();
     }
 
+    // Renderiza texto que puede contener bloques JSON intercalados con texto normal
+    function renderMixedContent(text, container, textClass, codeClass) {
+        const lines = text.split('\n');
+        let textBuffer = [];
+        let jsonBuffer = [];
+        let depth = 0;
+        let inJson = false;
+
+        function flushText() {
+            if (!textBuffer.length) return;
+            const joined = textBuffer.join('\n');
+            if (!joined.trim()) { textBuffer = []; return; }
+            // Detectar URLs línea por línea y convertirlas en hipervínculos
+            const urlRegex = /^(https?:\/\/\S+)$/;
+            const lines = joined.split('\n');
+            let pendingText = [];
+            function dumpPending() {
+                if (!pendingText.length) return;
+                const el = document.createElement('span');
+                el.className = textClass;
+                el.textContent = pendingText.join('\n');
+                container.appendChild(el);
+                pendingText = [];
+            }
+            lines.forEach(line => {
+                if (urlRegex.test(line.trim())) {
+                    dumpPending();
+                    const a = document.createElement('a');
+                    a.href = line.trim();
+                    a.textContent = line.trim();
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer';
+                    a.className = 'ref-link';
+                    container.appendChild(a);
+                    container.appendChild(document.createTextNode('\n'));
+                } else {
+                    pendingText.push(line);
+                }
+            });
+            dumpPending();
+            textBuffer = [];
+        }
+
+        function flushJson() {
+            if (!jsonBuffer.length) return;
+            const raw = jsonBuffer.join('\n').trim();
+            const el = document.createElement('pre');
+            el.className = codeClass;
+            try {
+                // Intentar parsear JSON estricto; si falla (backticks, etc.) mostrar tal cual
+                const clean = raw.replace(/`([^`]*)`/g, '"$1"'); // reemplazar backticks
+                el.textContent = JSON.stringify(JSON.parse(clean), null, 2);
+            } catch(e) {
+                el.textContent = raw;
+            }
+            container.appendChild(el);
+            jsonBuffer = [];
+            depth = 0;
+            inJson = false;
+        }
+
+        lines.forEach(line => {
+            const trimmed = line.trim();
+
+            if (inJson) {
+                jsonBuffer.push(line);
+                depth += (trimmed.match(/[{[]/g) || []).length;
+                depth -= (trimmed.match(/[}\]]/g) || []).length;
+                if (depth <= 0) flushJson();
+                return;
+            }
+
+            if (/^[{\[]/.test(trimmed)) {
+                flushText();
+                inJson = true;
+                jsonBuffer = [line];
+                depth = (trimmed.match(/[{[]/g) || []).length;
+                depth -= (trimmed.match(/[}\]]/g) || []).length;
+                if (depth <= 0) flushJson();
+                return;
+            }
+
+            textBuffer.push(line);
+        });
+
+        if (inJson) flushJson();
+        else flushText();
+    }
+
     function loadQuestion() {
         const actualIdx = (currentMode === 'review') ? reviewIndices[currentIdx] : currentIdx;
         const q = sessionDB[actualIdx];
@@ -679,7 +828,10 @@
         document.getElementById('progress-bar').style.width = `${((currentIdx + 1) / totalToDisplay) * 100}%`;
         document.getElementById('current-idx').innerText = currentIdx + 1;
         document.getElementById('total-session').innerText = totalToDisplay;
-        document.getElementById('q-text').innerText = q._text;
+        // Renderizar texto de pregunta: detectar bloques JSON embebidos
+        const qEl = document.getElementById('q-text');
+        qEl.innerHTML = '';
+        renderMixedContent(q._text, qEl, 'q-segment', 'q-code');
 
         const isMulti = q._correctIndices.length > 1;
         const badge = document.getElementById('type-badge');
@@ -717,9 +869,25 @@
                 e.stopPropagation();
             };
 
-            const span = document.createElement('span');
-            span.innerText = opt.txt;
-            label.append(input, span);
+            const isCode = /^\s*[{\[]/.test(opt.txt) && opt.txt.includes('\n');
+            if (isCode) {
+                label.classList.add('code-opt');
+                const pre = document.createElement('pre');
+                pre.className = 'opt-code';
+                // Intentar parsear y re-formatear el JSON con indentación
+                try {
+                    const parsed = JSON.parse(opt.txt);
+                    pre.textContent = JSON.stringify(parsed, null, 2);
+                } catch (e) {
+                    // Si no es JSON válido, mostrar tal cual
+                    pre.textContent = opt.txt;
+                }
+                label.append(input, pre);
+            } else {
+                const span = document.createElement('span');
+                span.innerText = opt.txt;
+                label.append(input, span);
+            }
             container.appendChild(label);
         });
 
@@ -741,7 +909,10 @@
         document.getElementById('btn-return').style.display = (currentMode === 'review') ? 'inline-block' : 'none';
 
         document.getElementById('fb-area').style.display = (currentMode === 'review' || q._state.answered) ? 'block' : 'none';
-        document.getElementById('fb-text').innerText = q._explanation;
+        // Renderizar explicación usando el helper compartido
+        const fbText = document.getElementById('fb-text');
+        fbText.innerHTML = '';
+        renderMixedContent(q._explanation, fbText, 'feedback-content', 'fb-code');
     }
 
     function checkAnswer() {
